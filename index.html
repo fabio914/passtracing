@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Draw</title>
+        <meta charset="utf-8">
+        <style>
+            body { margin: 0; }
+        </style>
+    </head>
+    <body style="background-color:black;">
+        <!-- Import maps polyfill -->
+        <!-- Remove this when import maps will be widely supported -->
+        <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "https://unpkg.com/three@0.147.0/build/three.module.js",
+                    "three/addons/": "https://unpkg.com/three@0.147.0/examples/jsm/",
+                    "three-mesh-ui": "https://unpkg.com/three-mesh-ui@6.5.2/build/three-mesh-ui.module.js"
+                }
+            }
+        </script>
+
+        <script type="module">
+
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { ARButton } from 'three/addons/webxr/ARButton.js';
+
+import ThreeMeshUI from 'three-mesh-ui';
+
+let container;
+let camera, scene, renderer;
+let controller1, controller2;
+let clock;
+
+let group = null;
+let imagePlane = null;
+let currentOpacity = 0.5;
+let currentScale = 1.0;
+
+let debugText = null;
+
+init();
+animate();
+
+function init() {
+
+    container = document.createElement( 'div' );
+    document.body.appendChild( container );
+
+    scene = new THREE.Scene();
+
+    camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 10 );
+    camera.position.set( 0, 0, 3 );
+
+    const controls = new OrbitControls( camera, container );
+    controls.minDistance = 0;
+    controls.maxDistance = 8;
+
+    scene.add( new THREE.HemisphereLight( 0x808080, 0x606060 ) );
+
+    const light = new THREE.DirectionalLight( 0xffffff );
+    light.position.set( 0, 6, 0 );
+    scene.add( light );
+
+    //
+
+    renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
+    renderer.setPixelRatio( window.devicePixelRatio );
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.localClippingEnabled = true;
+    renderer.xr.enabled = true;
+    container.appendChild( renderer.domElement );
+
+    document.body.appendChild( ARButton.createButton( renderer ) );
+
+    // controllers
+
+    controller1 = renderer.xr.getController( 0 );
+    controller1.addEventListener( 'selectstart', onSelectStart );
+    controller1.addEventListener( 'selectend', onSelectEnd );
+    scene.add( controller1 );
+
+    controller2 = renderer.xr.getController( 1 );
+    controller2.addEventListener( 'selectstart', onSelectStart );
+    controller2.addEventListener( 'selectend', onSelectEnd );
+    scene.add( controller2 );
+
+    //
+
+    const length = 0.25;
+    group = new THREE.Group();
+    group.position.set(0, 0, -0.5);
+
+    scene.add(group);
+
+    loadTexture(group, length);
+
+    //
+
+    clock = new THREE.Clock();
+
+    // 
+
+    const debugContainer = new ThreeMeshUI.Block({
+        borderRadius: 0,
+        width: 1.5,
+        height: 1.0,
+        padding: 0.02,
+        textAlign: 'left',
+        fontKerning: 'none',
+        whiteSpace: 'pre-wrap',
+        fontFamily: 'https://unpkg.com/three-mesh-ui@6.5.2/examples/assets/Roboto-msdf.json',
+        fontTexture: 'https://unpkg.com/three-mesh-ui@6.5.2/examples/assets/Roboto-msdf.png'
+    });
+
+    debugText = new ThreeMeshUI.Text({
+        content: "Test",
+        fontSize: 0.04
+    });
+
+    debugContainer.add( debugText );
+
+    debugContainer.position.set(0, 0, -1);
+
+    scene.add(debugContainer);
+
+    //
+
+    window.addEventListener( 'resize', onWindowResize );
+}
+
+function loadTexture( container, length ) {
+
+    const loader = new THREE.TextureLoader();
+
+    loader.load(
+        'https://upload.wikimedia.org/wikipedia/commons/6/61/Wikipedia-logo-transparent.png',
+
+        function ( texture ) {
+            let originalWidth = texture.image.width;
+            let originalHeight = texture.image.height;
+
+            let max = Math.max(originalWidth, originalHeight);
+            let width = (originalWidth/max) * length;
+            let height = (originalHeight/max) * length;
+
+            const geometry = new THREE.PlaneGeometry(width, height);
+            const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+            imagePlane = new THREE.Mesh(geometry, material);
+
+            container.add(imagePlane);
+
+            imagePlane.material.opacity = currentOpacity;
+        },
+
+        undefined,
+
+        function ( err ) {
+            console.error( 'An error happened.' );
+        }
+    );
+}
+
+function incrementOpacity(delta) {
+    currentOpacity += delta;
+    currentOpacity = Math.min(Math.max(currentOpacity, 0.0), 1.0);
+
+    if (imagePlane != null) {
+        imagePlane.material.opacity = currentOpacity;
+    }
+}
+
+function incrementScale(delta) {
+    currentScale += delta;
+    currentScale = Math.min(Math.max(currentScale, 0.0), 10.0);
+
+    if (group != null) {
+        group.scale.set(currentScale, currentScale, currentScale);
+    }
+}
+
+function onWindowResize() {
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+
+}
+
+function onSelectStart( event ) {
+
+    const controller = event.target;
+
+
+
+}
+
+function onSelectEnd( event ) {
+
+    const controller = event.target;
+
+
+
+}
+
+//
+
+function animate() {
+
+    renderer.setAnimationLoop( render );
+
+}
+
+function render() {
+    const xrSession = renderer.xr.getSession();
+    const elapsedTime = clock.getDelta();
+
+    if (xrSession != null && xrSession.inputSources.length > 0) {
+
+
+
+        for (let i = 0; i < xrSession.inputSources.length; i++) {
+            const input = xrSession.inputSources[i];
+            const gamepad = input.gamepad; 
+
+            if (
+                input.handedness == "right" && 
+                gamepad != null && 
+                gamepad.axes != null &&
+                gamepad.axes.length >= 4
+            ) {
+                const horizontal = gamepad.axes[2];
+                const vertical = gamepad.axes[3];
+
+                if (debugText != null) {
+                    debugText.set( { content: "Horizontal:" + horizontal + " Vertical:" + vertical + " " });
+                }
+
+                if (horizontal > 0.7) {
+                    incrementScale(5.0 * elapsedTime);
+                } else if (horizontal < -0.7) {
+                    incrementScale(-5.0 * elapsedTime);
+                }
+
+                if (vertical > 0.7) {
+                    incrementOpacity(-2.5 * elapsedTime);
+                } else if (vertical < -0.7) {
+                    incrementOpacity(2.5 * elapsedTime);
+                }
+            }
+        }
+
+    }
+
+    ThreeMeshUI.update();
+
+    renderer.render( scene, camera );
+}
+
+        </script>
+    </body>
+</html>
