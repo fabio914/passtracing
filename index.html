@@ -61,15 +61,16 @@ void main() {
     float vertical = -topLeft - 2.0 * top - topRight + bottomLeft + 2.0 * bottom + bottomRight;
 
     float sobelResult = sqrt(horizontal * horizontal + vertical * vertical);
-    float inverseSobel = 1.0 - sobelResult;
 
-    vec4 sobelColor = vec4(inverseSobel, inverseSobel, inverseSobel, sobelResult);
+    vec4 sobelColor = vec4(1.0 - sobelResult, 1.0 - sobelResult, 1.0 - sobelResult, sobelResult);
     vec4 currentColor = texture2D(colorTexture, uv);
 
+    float smoothOpacity = smoothstep(0.0, 0.2, opacity);
+
     gl_FragColor = vec4(
-        currentColor.x * opacity + (1.0 - opacity) * sobelColor.x,
-        currentColor.y * opacity + (1.0 - opacity) * sobelColor.y,
-        currentColor.z * opacity + (1.0 - opacity) * sobelColor.z,
+        currentColor.x * smoothOpacity + (1.0 - smoothOpacity) * sobelColor.x,
+        currentColor.y * smoothOpacity + (1.0 - smoothOpacity) * sobelColor.y,
+        currentColor.z * smoothOpacity + (1.0 - smoothOpacity) * sobelColor.z,
         currentColor.w * opacity + (1.0 - opacity) * sobelColor.w
     );
 }
@@ -91,7 +92,7 @@ let clock;
 
 let group = null;
 let imagePlane = null;
-let currentOpacity = 0.5;
+let currentOpacity = 0.75;
 let currentScale = 1.0;
 
 init();
@@ -125,6 +126,7 @@ function init() {
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.localClippingEnabled = true;
     renderer.xr.enabled = true;
+    renderer.xr.setFoveation(0);
     container.appendChild( renderer.domElement );
 
     document.body.appendChild( ARButton.createButton( renderer ) );
@@ -174,6 +176,8 @@ function loadTexture( container, length ) {
             const geometry = new THREE.PlaneGeometry(width, height);
             // const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide });
             // imagePlane = new THREE.Mesh(geometry, material);
+
+            texture.generateMipmaps = false;
 
             const sobelMaterial = new THREE.ShaderMaterial({
                 transparent: true,
@@ -257,9 +261,9 @@ function loop() {
                 }
 
                 if (vertical > 0.7) {
-                    incrementOpacity(-2.5 * elapsedTime);
+                    incrementOpacity(-1.0 * elapsedTime);
                 } else if (vertical < -0.7) {
-                    incrementOpacity(2.5 * elapsedTime);
+                    incrementOpacity(1.0 * elapsedTime);
                 }
 
                 if (triggerButton.pressed) {
