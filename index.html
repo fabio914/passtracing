@@ -40,8 +40,6 @@ let imagePlane = null;
 let currentOpacity = 0.5;
 let currentScale = 1.0;
 
-let debugText = null;
-
 init();
 animate();
 
@@ -80,13 +78,9 @@ function init() {
     // controllers
 
     controller1 = renderer.xr.getController( 0 );
-    controller1.addEventListener( 'selectstart', onSelectStart );
-    controller1.addEventListener( 'selectend', onSelectEnd );
     scene.add( controller1 );
 
     controller2 = renderer.xr.getController( 1 );
-    controller2.addEventListener( 'selectstart', onSelectStart );
-    controller2.addEventListener( 'selectend', onSelectEnd );
     scene.add( controller2 );
 
     //
@@ -102,31 +96,6 @@ function init() {
     //
 
     clock = new THREE.Clock();
-
-    // 
-
-    const debugContainer = new ThreeMeshUI.Block({
-        borderRadius: 0,
-        width: 1.5,
-        height: 1.0,
-        padding: 0.02,
-        textAlign: 'left',
-        fontKerning: 'none',
-        whiteSpace: 'pre-wrap',
-        fontFamily: 'https://unpkg.com/three-mesh-ui@6.5.2/examples/assets/Roboto-msdf.json',
-        fontTexture: 'https://unpkg.com/three-mesh-ui@6.5.2/examples/assets/Roboto-msdf.png'
-    });
-
-    debugText = new ThreeMeshUI.Text({
-        content: "Test",
-        fontSize: 0.04
-    });
-
-    debugContainer.add( debugText );
-
-    debugContainer.position.set(0, 0, -1);
-
-    scene.add(debugContainer);
 
     //
 
@@ -149,7 +118,7 @@ function loadTexture( container, length ) {
             let height = (originalHeight/max) * length;
 
             const geometry = new THREE.PlaneGeometry(width, height);
-            const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+            const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide });
             imagePlane = new THREE.Mesh(geometry, material);
 
             container.add(imagePlane);
@@ -176,7 +145,7 @@ function incrementOpacity(delta) {
 
 function incrementScale(delta) {
     currentScale += delta;
-    currentScale = Math.min(Math.max(currentScale, 0.0), 10.0);
+    currentScale = Math.min(Math.max(currentScale, 0.0), 4.0);
 
     if (group != null) {
         group.scale.set(currentScale, currentScale, currentScale);
@@ -184,45 +153,22 @@ function incrementScale(delta) {
 }
 
 function onWindowResize() {
-
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-
     renderer.setSize( window.innerWidth, window.innerHeight );
-
-}
-
-function onSelectStart( event ) {
-
-    const controller = event.target;
-
-
-
-}
-
-function onSelectEnd( event ) {
-
-    const controller = event.target;
-
-
-
 }
 
 //
 
 function animate() {
-
-    renderer.setAnimationLoop( render );
-
+    renderer.setAnimationLoop(loop);
 }
 
-function render() {
+function loop() {
     const xrSession = renderer.xr.getSession();
     const elapsedTime = clock.getDelta();
 
     if (xrSession != null && xrSession.inputSources.length > 0) {
-
-
 
         for (let i = 0; i < xrSession.inputSources.length; i++) {
             const input = xrSession.inputSources[i];
@@ -231,26 +177,28 @@ function render() {
             if (
                 input.handedness == "right" && 
                 gamepad != null && 
-                gamepad.axes != null &&
-                gamepad.axes.length >= 4
+                gamepad.mapping == "xr-standard"
             ) {
-                const horizontal = gamepad.axes[2];
-                const vertical = gamepad.axes[3];
+                const horizontal = gamepad.axes[2]; // Primary thumbstick X
+                const vertical = gamepad.axes[3]; // Primary thumbstick Y
 
-                if (debugText != null) {
-                    debugText.set( { content: "Horizontal:" + horizontal + " Vertical:" + vertical + " " });
-                }
+                const triggerButton = gamepad.buttons[0];
 
                 if (horizontal > 0.7) {
-                    incrementScale(5.0 * elapsedTime);
+                    incrementScale(1.0 * elapsedTime);
                 } else if (horizontal < -0.7) {
-                    incrementScale(-5.0 * elapsedTime);
+                    incrementScale(-1.0 * elapsedTime);
                 }
 
                 if (vertical > 0.7) {
                     incrementOpacity(-2.5 * elapsedTime);
                 } else if (vertical < -0.7) {
                     incrementOpacity(2.5 * elapsedTime);
+                }
+
+                if (triggerButton.pressed) {
+                    group.position.copy(controller1.position);
+                    group.setRotationFromQuaternion(controller1.quaternion);
                 }
             }
         }
