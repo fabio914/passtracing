@@ -22,6 +22,60 @@
             }
         </script>
 
+        <script type="x-shader/x-vertex" id="vertexshader">
+varying vec2 vUv;
+
+void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+        </script>
+
+        <script type="x-shader/x-fragment" id="fragmentshader">
+uniform sampler2D colorTexture;
+uniform float opacity;
+float stepSize = 2.0;
+
+varying vec2 vUv;
+
+float intensity(in vec4 color) {
+    return sqrt((color.x*color.x)+(color.y*color.y)+(color.z*color.z));
+}
+
+void main() {
+    vec2 uv = vUv;
+    
+    ivec2 imageSize = textureSize(colorTexture, 0);
+    vec2 step = vec2(stepSize/float(imageSize.x), stepSize/float(imageSize.y));
+
+    float topLeft     = intensity(texture2D(colorTexture, uv + vec2(-step.x, step.y)));
+    float left        = intensity(texture2D(colorTexture, uv + vec2(-step.x, 0)));
+    float bottomLeft  = intensity(texture2D(colorTexture, uv + vec2(-step.x, -step.y)));
+    float top         = intensity(texture2D(colorTexture, uv + vec2(0, step.y)));
+    float bottom      = intensity(texture2D(colorTexture, uv + vec2(0, -step.y)));
+    float topRight    = intensity(texture2D(colorTexture, uv + vec2(step.x, step.y)));
+    float right       = intensity(texture2D(colorTexture, uv + vec2(step.x, 0)));
+    float bottomRight = intensity(texture2D(colorTexture, uv + vec2(step.x, -step.y)));
+ 
+    float horizontal = topLeft + 2.0 * left + bottomLeft - topRight - 2.0 * right - bottomRight;
+    float vertical = -topLeft - 2.0 * top - topRight + bottomLeft + 2.0 * bottom + bottomRight;
+
+    float sobelResult = sqrt(horizontal * horizontal + vertical * vertical);
+    float inverseSobel = 1.0 - sobelResult;
+
+    vec4 sobelColor = vec4(inverseSobel, inverseSobel, inverseSobel, sobelResult);
+    vec4 currentColor = texture2D(colorTexture, uv);
+
+    gl_FragColor = vec4(
+        currentColor.x * opacity + (1.0 - opacity) * sobelColor.x,
+        currentColor.y * opacity + (1.0 - opacity) * sobelColor.y,
+        currentColor.z * opacity + (1.0 - opacity) * sobelColor.z,
+        currentColor.w * opacity + (1.0 - opacity) * sobelColor.w
+    );
+}
+        </script>
+
+
         <script type="module">
 
 import * as THREE from 'three';
@@ -118,12 +172,23 @@ function loadTexture( container, length ) {
             let height = (originalHeight/max) * length;
 
             const geometry = new THREE.PlaneGeometry(width, height);
-            const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide });
-            imagePlane = new THREE.Mesh(geometry, material);
+            // const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide });
+            // imagePlane = new THREE.Mesh(geometry, material);
+
+            const sobelMaterial = new THREE.ShaderMaterial({
+                transparent: true,
+                side: THREE.DoubleSide,
+                uniforms: {
+                    colorTexture: { value: texture },
+                    opacity: { value: currentOpacity }
+                },
+                vertexShader: document.getElementById( 'vertexshader' ).textContent,
+                fragmentShader: document.getElementById( 'fragmentshader' ).textContent
+            });
+
+            imagePlane = new THREE.Mesh(geometry, sobelMaterial);
 
             container.add(imagePlane);
-
-            imagePlane.material.opacity = currentOpacity;
         },
 
         undefined,
@@ -139,7 +204,7 @@ function incrementOpacity(delta) {
     currentOpacity = Math.min(Math.max(currentOpacity, 0.0), 1.0);
 
     if (imagePlane != null) {
-        imagePlane.material.opacity = currentOpacity;
+        imagePlane.material.uniforms["opacity"].value = currentOpacity;
     }
 }
 
