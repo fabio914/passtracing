@@ -77,11 +77,11 @@ function init() {
 
     // controllers
 
-    controller1 = renderer.xr.getController( 0 );
-    scene.add( controller1 );
+    controller1 =  renderer.xr.getController(0);
+    scene.add(controller1);
 
-    controller2 = renderer.xr.getController( 1 );
-    scene.add( controller2 );
+    controller2 = renderer.xr.getController(1);
+    scene.add(controller2);
 
     //
 
@@ -177,7 +177,8 @@ function loop() {
             if (
                 input.handedness == "right" && 
                 gamepad != null && 
-                gamepad.mapping == "xr-standard"
+                gamepad.mapping == "xr-standard" &&
+                gamepad.axes.length >= 4
             ) {
                 const horizontal = gamepad.axes[2]; // Primary thumbstick X
                 const vertical = gamepad.axes[3]; // Primary thumbstick Y
@@ -197,7 +198,8 @@ function loop() {
                 }
 
                 if (triggerButton.pressed) {
-                    group.position.copy(controller1.position);
+                    const offsetPosition = controller1.localToWorld(new THREE.Vector3(0, 0, 0.045));
+                    group.position.copy(offsetPosition);
                     group.setRotationFromQuaternion(controller1.quaternion);
                 }
             }
