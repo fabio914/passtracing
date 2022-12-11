@@ -65,13 +65,13 @@ void main() {
     vec4 sobelColor = vec4(1.0 - sobelResult, 1.0 - sobelResult, 1.0 - sobelResult, sobelResult);
     vec4 currentColor = texture2D(colorTexture, uv);
 
-    float smoothOpacity = smoothstep(0.0, 0.2, opacity);
+    float smoothOpacity = smoothstep(0.0, 0.3, opacity);
 
     gl_FragColor = vec4(
         currentColor.x * smoothOpacity + (1.0 - smoothOpacity) * sobelColor.x,
         currentColor.y * smoothOpacity + (1.0 - smoothOpacity) * sobelColor.y,
         currentColor.z * smoothOpacity + (1.0 - smoothOpacity) * sobelColor.z,
-        currentColor.w * opacity + (1.0 - opacity) * sobelColor.w
+        currentColor.w * min(opacity, smoothOpacity) + (1.0 - smoothOpacity) * sobelColor.w
     );
 }
         </script>
