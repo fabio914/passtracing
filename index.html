@@ -100,40 +100,34 @@ animate();
 
 function init() {
 
-    container = document.createElement( 'div' );
-    document.body.appendChild( container );
+    container = document.createElement('div');
+    document.body.appendChild(container);
 
     scene = new THREE.Scene();
 
-    camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 10 );
-    camera.position.set( 0, 0, 3 );
+    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 10);
+    camera.position.set(0, 0, 1);
 
-    const controls = new OrbitControls( camera, container );
+    const controls = new OrbitControls(camera, container);
     controls.minDistance = 0;
     controls.maxDistance = 8;
 
-    scene.add( new THREE.HemisphereLight( 0x808080, 0x606060 ) );
-
-    const light = new THREE.DirectionalLight( 0xffffff );
-    light.position.set( 0, 6, 0 );
-    scene.add( light );
-
     //
 
-    renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
-    renderer.setPixelRatio( window.devicePixelRatio );
-    renderer.setSize( window.innerWidth, window.innerHeight );
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.localClippingEnabled = true;
     renderer.xr.enabled = true;
     renderer.xr.setFoveation(0);
-    container.appendChild( renderer.domElement );
+    container.appendChild(renderer.domElement);
 
-    document.body.appendChild( ARButton.createButton( renderer ) );
+    document.body.appendChild(ARButton.createButton(renderer));
 
     // controllers
 
-    controller1 =  renderer.xr.getController(0);
+    controller1 = renderer.xr.getController(0);
     scene.add(controller1);
 
     controller2 = renderer.xr.getController(1);
@@ -147,7 +141,14 @@ function init() {
 
     scene.add(group);
 
-    loadTexture(group, length);
+    const url = new URL(window.location);
+
+    try {
+        const imageUrl = new URL(url.searchParams.get('image'));
+        loadTexture(group, length, imageUrl.toString());
+    } catch (exception) {
+        loadTexture(group, length, 'Images/discovery.jpg');
+    }
 
     //
 
@@ -155,17 +156,17 @@ function init() {
 
     //
 
-    window.addEventListener( 'resize', onWindowResize );
+    window.addEventListener('resize', onWindowResize);
 }
 
-function loadTexture( container, length ) {
+function loadTexture(container, length, url) {
 
     const loader = new THREE.TextureLoader();
 
     loader.load(
-        'https://upload.wikimedia.org/wikipedia/commons/6/61/Wikipedia-logo-transparent.png',
+        url,
 
-        function ( texture ) {
+        function (texture) {
             let originalWidth = texture.image.width;
             let originalHeight = texture.image.height;
 
@@ -174,8 +175,6 @@ function loadTexture( container, length ) {
             let height = (originalHeight/max) * length;
 
             const geometry = new THREE.PlaneGeometry(width, height);
-            // const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide });
-            // imagePlane = new THREE.Mesh(geometry, material);
 
             texture.generateMipmaps = false;
 
@@ -186,8 +185,8 @@ function loadTexture( container, length ) {
                     colorTexture: { value: texture },
                     opacity: { value: currentOpacity }
                 },
-                vertexShader: document.getElementById( 'vertexshader' ).textContent,
-                fragmentShader: document.getElementById( 'fragmentshader' ).textContent
+                vertexShader: document.getElementById('vertexshader').textContent,
+                fragmentShader: document.getElementById('fragmentshader').textContent
             });
 
             imagePlane = new THREE.Mesh(geometry, sobelMaterial);
@@ -197,8 +196,8 @@ function loadTexture( container, length ) {
 
         undefined,
 
-        function ( err ) {
-            console.error( 'An error happened.' );
+        function (err) {
+            alert("Unable to load image, try a different URL.");
         }
     );
 }
