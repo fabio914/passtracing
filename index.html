@@ -5,6 +5,31 @@
         <meta charset="utf-8">
         <style>
             body { margin: 0; }
+
+            .popupWindow {
+                position: fixed;
+                top: 12.5%;
+                left: 50%;
+                transform: translate(-50%, -12.5%);
+                background-color: #303841;
+                border-radius: 4px;
+                font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+                color: #EFEFEF;
+                overflow: hidden;
+            }
+
+            .popupHeader {
+                background-color: #2E3238; 
+                padding: 8px; 
+                text-align: center; 
+                font-size: 75%;
+            }
+
+            .popupSection {
+                padding: 8px; 
+                white-space: pre-wrap; 
+                background-color: #50565E;
+            }
         </style>
     </head>
     <body style="background-color:black;">
@@ -99,9 +124,7 @@ init();
 animate();
 
 function init() {
-
-    container = document.createElement('div');
-    document.body.appendChild(container);
+    container = document.getElementById("container");
 
     scene = new THREE.Scene();
 
@@ -112,7 +135,9 @@ function init() {
     controls.minDistance = 0;
     controls.maxDistance = 8;
 
-    //
+    clock = new THREE.Clock();
+
+    // Renderer
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -123,9 +148,7 @@ function init() {
     renderer.xr.setFoveation(0);
     container.appendChild(renderer.domElement);
 
-    document.body.appendChild(ARButton.createButton(renderer));
-
-    // controllers
+    // Controllers
 
     controller1 = renderer.xr.getController(0);
     scene.add(controller1);
@@ -133,7 +156,7 @@ function init() {
     controller2 = renderer.xr.getController(1);
     scene.add(controller2);
 
-    //
+    // Load image
 
     const length = 0.25;
     group = new THREE.Group();
@@ -142,21 +165,34 @@ function init() {
     scene.add(group);
 
     const url = new URL(window.location);
+    const imageUrlString = url.searchParams.get('image');
 
-    try {
-        const imageUrl = new URL(url.searchParams.get('image'));
-        loadTexture(group, length, imageUrl.toString());
-    } catch (exception) {
+    if (imageUrlString == null) {
         loadTexture(group, length, 'Images/discovery.jpg');
+    } else {
+        try {
+            const imageUrl = new URL(imageUrlString);
+            loadTexture(group, length, imageUrl.toString());
+        } catch (exception) {
+            alert("Invalid URL, try a different URL.");
+        }
     }
 
-    //
-
-    clock = new THREE.Clock();
-
-    //
+    // Resize event
 
     window.addEventListener('resize', onWindowResize);
+
+    // URL Input
+
+    const inputLink = document.getElementById("urlInputLink");
+    inputLink.onclick = changeImageUrl;
+}
+
+function changeImageUrl() {
+    const urlInput = document.getElementById("urlInput");
+    const url = new URL(window.location);
+    url.searchParams.set("image", urlInput.value);
+    window.location = url.toString();
 }
 
 function loadTexture(container, length, url) {
@@ -167,6 +203,8 @@ function loadTexture(container, length, url) {
         url,
 
         function (texture) {
+            document.body.appendChild(ARButton.createButton(renderer));
+
             let originalWidth = texture.image.width;
             let originalHeight = texture.image.height;
 
@@ -277,9 +315,18 @@ function loop() {
 
     ThreeMeshUI.update();
 
-    renderer.render( scene, camera );
+    renderer.render(scene, camera);
 }
 
         </script>
+
+        <div id="container"></div>
+
+        <div class="popupWindow">
+            <div class="popupHeader">XR Draw</div>
+            <div class="popupSection">Paste an image URL below, then click on "load image", or click on the AR button below to start.</div>
+            <div class="popupSection"><div style="margin-right: 8px"><input id="urlInput" type="url" style="width: 100%"/></div></div>
+            <div class="popupSection"><a href="#" style="color: #EFEFEF" id="urlInputLink">Load image</a></div>
+        </div>
     </body>
 </html>
