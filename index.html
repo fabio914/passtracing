@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>Draw</title>
+        <title>Draw Passthrough</title>
         <meta charset="utf-8">
         <style>
         body { margin: 0; }
@@ -117,8 +117,11 @@
 
         let group = null;
         let imagePlane = null;
+        let instructionsPlane = null;
         let currentOpacity = 0.75;
         let currentScale = 1.0;
+        let previousDidPressHideImage = false;
+        let previousDidPressHideInstructions = false;
 
         init();
         animate();
@@ -156,6 +159,10 @@
             controller2 = renderer.xr.getController(1);
             scene.add(controller2);
 
+            // UI
+
+            makeInstructionsUI();
+
             // Load image
 
             const length = 0.25;
@@ -192,6 +199,119 @@
 
             const sendToQuestLink = document.getElementById("urlToQuestLink");
             sendToQuestLink.onclick = sendUrlToQuest;
+        }
+
+        function makeInstructionsUI() {
+            const textContainer = new ThreeMeshUI.Block({
+                borderRadius: 0.05,
+                width: 0.45,
+                height: 0.60,
+                padding: 0.05,
+                textAlign: 'left',
+                fontKerning: 'none',
+                whiteSpace: 'pre-wrap',
+                fontFamily: 'https://unpkg.com/three-mesh-ui@6.5.2/examples/assets/Roboto-msdf.json',
+                fontTexture: 'https://unpkg.com/three-mesh-ui@6.5.2/examples/assets/Roboto-msdf.png'
+            });
+
+            textContainer.rotation.y = -45.0 * (Math.PI/180.0);
+            textContainer.position.set(0.5, 0, -0.5);
+
+            textContainer.add(
+                new ThreeMeshUI.Text({
+                    content: "Instructions\n",
+                    fontSize: 0.04,
+                    fontColor: new THREE.Color(0xffff00)
+                }),
+
+                new ThreeMeshUI.Text({
+                    content: "\nAnalog right: ",
+                    fontSize: 0.025,
+                    fontColor: new THREE.Color(0xffff00)
+                }),
+
+                new ThreeMeshUI.Text({
+                    content: "Increase opacity",
+                    fontSize: 0.025,
+                    fontColor: new THREE.Color(0xffffff)
+                }),
+
+                new ThreeMeshUI.Text({
+                    content: "\nAnalog left: ",
+                    fontSize: 0.025,
+                    fontColor: new THREE.Color(0xffff00)
+                }),
+
+                new ThreeMeshUI.Text({
+                    content: "Decrease opacity",
+                    fontSize: 0.025,
+                    fontColor: new THREE.Color(0xffffff)
+                }),
+
+                new ThreeMeshUI.Text({
+                    content: "\n\nAnalog up: ",
+                    fontSize: 0.025,
+                    fontColor: new THREE.Color(0xffff00)
+                }),
+
+                new ThreeMeshUI.Text({
+                    content: "Increase size",
+                    fontSize: 0.025,
+                    fontColor: new THREE.Color(0xffffff)
+                }),
+
+                new ThreeMeshUI.Text({
+                    content: "\nAnalog down: ",
+                    fontSize: 0.025,
+                    fontColor: new THREE.Color(0xffff00)
+                }),
+
+                new ThreeMeshUI.Text({
+                    content: "Decrease size",
+                    fontSize: 0.025,
+                    fontColor: new THREE.Color(0xffffff)
+                }),
+
+
+                new ThreeMeshUI.Text({
+                    content: "\n\nHold trigger: ",
+                    fontSize: 0.025,
+                    fontColor: new THREE.Color(0xffff00)
+                }),
+
+                new ThreeMeshUI.Text({
+                    content: "Reposition image",
+                    fontSize: 0.025,
+                    fontColor: new THREE.Color(0xffffff)
+                }),
+
+                new ThreeMeshUI.Text({
+                    content: "\n\nA or X: ",
+                    fontSize: 0.025,
+                    fontColor: new THREE.Color(0xffff00)
+                }),
+
+                new ThreeMeshUI.Text({
+                    content: "Show/Hide image",
+                    fontSize: 0.025,
+                    fontColor: new THREE.Color(0xffffff)
+                }),
+
+                new ThreeMeshUI.Text({
+                    content: "\nB or Y: ",
+                    fontSize: 0.025,
+                    fontColor: new THREE.Color(0xffff00)
+                }),
+
+                new ThreeMeshUI.Text({
+                    content: "Show/Hide instructions",
+                    fontSize: 0.025,
+                    fontColor: new THREE.Color(0xffffff)
+                })
+            );
+
+            scene.add(textContainer);
+            instructionsPlane = textContainer;
         }
 
         function changeImageUrl() {
@@ -287,52 +407,81 @@
         }
 
         function loop() {
+            updateInput();
+            ThreeMeshUI.update();
+            renderer.render(scene, camera);
+        }
+
+        function updateInput() {
             const xrSession = renderer.xr.getSession();
             const elapsedTime = clock.getDelta();
 
-            if (xrSession != null && xrSession.inputSources.length > 0) {
+            let didPressHideImage = false;
+            let didPressHideInstructions = false;
 
-                for (let i = 0; i < xrSession.inputSources.length; i++) {
-                    const input = xrSession.inputSources[i];
-                    const gamepad = input.gamepad; 
-
-                    if (
-                        gamepad != null && 
-                        gamepad.mapping == "xr-standard" &&
-                        gamepad.axes.length >= 4
-                    ) {
-                        const horizontal = gamepad.axes[2]; // Primary thumbstick X
-                        const vertical = gamepad.axes[3]; // Primary thumbstick Y
-
-                        const triggerButton = gamepad.buttons[0];
-
-                        if (horizontal > 0.7) {
-                            incrementScale(1.0 * elapsedTime);
-                        } else if (horizontal < -0.7) {
-                            incrementScale(-1.0 * elapsedTime);
-                        }
-
-                        if (vertical > 0.7) {
-                            incrementOpacity(-1.0 * elapsedTime);
-                        } else if (vertical < -0.7) {
-                            incrementOpacity(1.0 * elapsedTime);
-                        }
-
-                        const controllerToUse = renderer.xr.getController(i);
-
-                        if (triggerButton.pressed) {
-                            const offsetPosition = controllerToUse.localToWorld(new THREE.Vector3(0, 0, 0.045));
-                            group.position.copy(offsetPosition);
-                            group.setRotationFromQuaternion(controllerToUse.quaternion);
-                        }
-                    }
-                }
-
+            if (xrSession == null || xrSession.inputSources.length <= 0) {
+                return;
             }
 
-            ThreeMeshUI.update();
+            for (let i = 0; i < xrSession.inputSources.length; i++) {
+                const input = xrSession.inputSources[i];
+                const gamepad = input.gamepad; 
 
-            renderer.render(scene, camera);
+                if (
+                    gamepad != null && 
+                    gamepad.mapping == "xr-standard" &&
+                    gamepad.axes.length >= 4
+                ) {
+                    const horizontal = gamepad.axes[2]; // Primary thumbstick X
+                    const vertical = gamepad.axes[3]; // Primary thumbstick Y
+
+                    const triggerButton = gamepad.buttons[0];
+                    const axButton = gamepad.buttons[4];
+                    const byButton = gamepad.buttons[5];
+
+                    if (vertical > 0.7) {
+                        incrementScale(-1.0 * elapsedTime);
+                    } else if (vertical < -0.7) {
+                        incrementScale(1.0 * elapsedTime);
+                    }
+
+                    if (horizontal > 0.7) {
+                        incrementOpacity(1.0 * elapsedTime);
+                    } else if (horizontal < -0.7) {
+                        incrementOpacity(-1.0 * elapsedTime);
+                    }
+
+                    const controllerToUse = renderer.xr.getController(i);
+
+                    if (triggerButton.pressed) {
+                        const offsetPosition = controllerToUse.localToWorld(new THREE.Vector3(0, 0, 0.045));
+                        group.position.copy(offsetPosition);
+                        group.setRotationFromQuaternion(controllerToUse.quaternion);
+                    }
+
+                    if (axButton.pressed) {
+                        didPressHideImage = true;
+                    }
+
+                    if (byButton.pressed) {
+                        didPressHideInstructions = true;
+                    }
+                }
+            }
+
+            const shouldChangeInstructionsVisibility = (!didPressHideInstructions && previousDidPressHideInstructions);
+            previousDidPressHideInstructions = didPressHideInstructions;
+
+            if (shouldChangeInstructionsVisibility) {
+                instructionsPlane.visible = !instructionsPlane.visible;
+            }
+
+            const shouldChangeImageVisibility = (!didPressHideImage && previousDidPressHideImage);
+            previousDidPressHideImage = didPressHideImage;
+
+            if (shouldChangeImageVisibility) {
+                imagePlane.visible = !imagePlane.visible;
+            }
         }
 
         </script>
@@ -340,8 +489,8 @@
         <div id="container"></div>
 
         <div class="popupWindow">
-            <div class="popupHeader">XR Draw</div>
-            <div class="popupSection">1. Paste an image URL below.<br/>2. Click on "load image" or "Send link to Meta Quest".<br/>3. Click on the AR button below to start.</div>
+            <div class="popupHeader">XR Draw Passthrough</div>
+            <div class="popupSection">1. Paste an image URL below.<br/>2. Click on "Load image" or "Send link to Meta Quest".<br/>3. Click on the "Start AR" button below to start.</div>
             <div class="popupSection"><div style="margin-right: 8px"><input id="urlInput" type="url" style="width: 100%"/></div></div>
             <div class="popupSection"><a href="#" style="color: #EFEFEF" id="urlInputLink">Load image</a></div>
             <div class="popupSection"><a href="#" style="color: #EFEFEF" id="urlToQuestLink">Send link to Meta Quest</a></div>
