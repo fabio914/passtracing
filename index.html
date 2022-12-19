@@ -4,32 +4,32 @@
         <title>Draw</title>
         <meta charset="utf-8">
         <style>
-            body { margin: 0; }
+        body { margin: 0; }
 
-            .popupWindow {
-                position: fixed;
-                top: 12.5%;
-                left: 50%;
-                transform: translate(-50%, -12.5%);
-                background-color: #303841;
-                border-radius: 4px;
-                font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
-                color: #EFEFEF;
-                overflow: hidden;
-            }
+        .popupWindow {
+            position: fixed;
+            top: 12.5%;
+            left: 50%;
+            transform: translate(-50%, -12.5%);
+            background-color: #303841;
+            border-radius: 4px;
+            font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+            color: #EFEFEF;
+            overflow: hidden;
+        }
 
-            .popupHeader {
-                background-color: #2E3238; 
-                padding: 8px; 
-                text-align: center; 
-                font-size: 75%;
-            }
+        .popupHeader {
+            background-color: #2E3238; 
+            padding: 8px; 
+            text-align: center; 
+            font-size: 75%;
+        }
 
-            .popupSection {
-                padding: 8px; 
-                white-space: pre-wrap; 
-                background-color: #50565E;
-            }
+        .popupSection {
+            padding: 8px; 
+            white-space: pre-wrap; 
+            background-color: #50565E;
+        }
         </style>
     </head>
     <body style="background-color:black;">
@@ -38,301 +38,302 @@
         <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
 
         <script type="importmap">
-            {
-                "imports": {
-                    "three": "https://unpkg.com/three@0.147.0/build/three.module.js",
-                    "three/addons/": "https://unpkg.com/three@0.147.0/examples/jsm/",
-                    "three-mesh-ui": "https://unpkg.com/three-mesh-ui@6.5.2/build/three-mesh-ui.module.js"
-                }
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.147.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.147.0/examples/jsm/",
+                "three-mesh-ui": "https://unpkg.com/three-mesh-ui@6.5.2/build/three-mesh-ui.module.js"
             }
+        }
         </script>
 
         <script type="x-shader/x-vertex" id="vertexshader">
-varying vec2 vUv;
+        varying vec2 vUv;
 
-void main() {
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-}
+        void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
         </script>
 
         <script type="x-shader/x-fragment" id="fragmentshader">
-uniform sampler2D colorTexture;
-uniform float opacity;
-float stepSize = 2.0;
+        uniform sampler2D colorTexture;
+        uniform float opacity;
+        float stepSize = 2.0;
 
-varying vec2 vUv;
+        varying vec2 vUv;
 
-float intensity(in vec4 color) {
-    return sqrt((color.x*color.x)+(color.y*color.y)+(color.z*color.z));
-}
+        float intensity(in vec4 color) {
+            return sqrt((color.x*color.x)+(color.y*color.y)+(color.z*color.z));
+        }
 
-void main() {
-    vec2 uv = vUv;
-    
-    ivec2 imageSize = textureSize(colorTexture, 0);
-    vec2 step = vec2(stepSize/float(imageSize.x), stepSize/float(imageSize.y));
+        void main() {
+            vec2 uv = vUv;
+            
+            ivec2 imageSize = textureSize(colorTexture, 0);
+            vec2 step = vec2(stepSize/float(imageSize.x), stepSize/float(imageSize.y));
 
-    float topLeft     = intensity(texture2D(colorTexture, uv + vec2(-step.x, step.y)));
-    float left        = intensity(texture2D(colorTexture, uv + vec2(-step.x, 0)));
-    float bottomLeft  = intensity(texture2D(colorTexture, uv + vec2(-step.x, -step.y)));
-    float top         = intensity(texture2D(colorTexture, uv + vec2(0, step.y)));
-    float bottom      = intensity(texture2D(colorTexture, uv + vec2(0, -step.y)));
-    float topRight    = intensity(texture2D(colorTexture, uv + vec2(step.x, step.y)));
-    float right       = intensity(texture2D(colorTexture, uv + vec2(step.x, 0)));
-    float bottomRight = intensity(texture2D(colorTexture, uv + vec2(step.x, -step.y)));
- 
-    float horizontal = topLeft + 2.0 * left + bottomLeft - topRight - 2.0 * right - bottomRight;
-    float vertical = -topLeft - 2.0 * top - topRight + bottomLeft + 2.0 * bottom + bottomRight;
+            float topLeft     = intensity(texture2D(colorTexture, uv + vec2(-step.x, step.y)));
+            float left        = intensity(texture2D(colorTexture, uv + vec2(-step.x, 0)));
+            float bottomLeft  = intensity(texture2D(colorTexture, uv + vec2(-step.x, -step.y)));
+            float top         = intensity(texture2D(colorTexture, uv + vec2(0, step.y)));
+            float bottom      = intensity(texture2D(colorTexture, uv + vec2(0, -step.y)));
+            float topRight    = intensity(texture2D(colorTexture, uv + vec2(step.x, step.y)));
+            float right       = intensity(texture2D(colorTexture, uv + vec2(step.x, 0)));
+            float bottomRight = intensity(texture2D(colorTexture, uv + vec2(step.x, -step.y)));
+         
+            float horizontal = topLeft + 2.0 * left + bottomLeft - topRight - 2.0 * right - bottomRight;
+            float vertical = -topLeft - 2.0 * top - topRight + bottomLeft + 2.0 * bottom + bottomRight;
 
-    float sobelResult = sqrt(horizontal * horizontal + vertical * vertical);
+            float sobelResult = sqrt(horizontal * horizontal + vertical * vertical);
 
-    vec4 sobelColor = vec4(1.0 - sobelResult, 1.0 - sobelResult, 1.0 - sobelResult, sobelResult);
-    vec4 currentColor = texture2D(colorTexture, uv);
+            vec4 sobelColor = vec4(1.0 - sobelResult, 1.0 - sobelResult, 1.0 - sobelResult, sobelResult);
+            vec4 currentColor = texture2D(colorTexture, uv);
 
-    float smoothOpacity = smoothstep(0.0, 0.3, opacity);
+            float smoothOpacity = smoothstep(0.0, 0.3, opacity);
 
-    gl_FragColor = vec4(
-        currentColor.x * smoothOpacity + (1.0 - smoothOpacity) * sobelColor.x,
-        currentColor.y * smoothOpacity + (1.0 - smoothOpacity) * sobelColor.y,
-        currentColor.z * smoothOpacity + (1.0 - smoothOpacity) * sobelColor.z,
-        currentColor.w * min(opacity, smoothOpacity) + (1.0 - smoothOpacity) * sobelColor.w
-    );
-}
+            gl_FragColor = vec4(
+                currentColor.x * smoothOpacity + (1.0 - smoothOpacity) * sobelColor.x,
+                currentColor.y * smoothOpacity + (1.0 - smoothOpacity) * sobelColor.y,
+                currentColor.z * smoothOpacity + (1.0 - smoothOpacity) * sobelColor.z,
+                currentColor.w * min(opacity, smoothOpacity) + (1.0 - smoothOpacity) * sobelColor.w
+            );
+        }
         </script>
 
 
         <script type="module">
 
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { ARButton } from 'three/addons/webxr/ARButton.js';
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { ARButton } from 'three/addons/webxr/ARButton.js';
 
-import ThreeMeshUI from 'three-mesh-ui';
+        import ThreeMeshUI from 'three-mesh-ui';
 
-let container;
-let camera, scene, renderer;
-let controller1, controller2;
-let clock;
+        let container;
+        let camera, scene, renderer;
+        let controller1, controller2;
+        let clock;
 
-let group = null;
-let imagePlane = null;
-let currentOpacity = 0.75;
-let currentScale = 1.0;
+        let group = null;
+        let imagePlane = null;
+        let currentOpacity = 0.75;
+        let currentScale = 1.0;
 
-init();
-animate();
+        init();
+        animate();
 
-function init() {
-    container = document.getElementById("container");
+        function init() {
+            container = document.getElementById("container");
 
-    scene = new THREE.Scene();
+            scene = new THREE.Scene();
 
-    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 10);
-    camera.position.set(0, 0, 1);
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 10);
+            camera.position.set(0, 0, 1);
 
-    const controls = new OrbitControls(camera, container);
-    controls.minDistance = 0;
-    controls.maxDistance = 8;
+            const controls = new OrbitControls(camera, container);
+            controls.minDistance = 0;
+            controls.maxDistance = 8;
 
-    clock = new THREE.Clock();
+            clock = new THREE.Clock();
 
-    // Renderer
+            // Renderer
 
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.outputEncoding = THREE.sRGBEncoding;
-    renderer.localClippingEnabled = true;
-    renderer.xr.enabled = true;
-    renderer.xr.setFoveation(0);
-    container.appendChild(renderer.domElement);
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            renderer.localClippingEnabled = true;
+            renderer.xr.enabled = true;
+            renderer.xr.setFoveation(0);
+            container.appendChild(renderer.domElement);
 
-    // Controllers
+            // Controllers
 
-    controller1 = renderer.xr.getController(0);
-    scene.add(controller1);
+            controller1 = renderer.xr.getController(0);
+            scene.add(controller1);
 
-    controller2 = renderer.xr.getController(1);
-    scene.add(controller2);
+            controller2 = renderer.xr.getController(1);
+            scene.add(controller2);
 
-    // Load image
+            // Load image
 
-    const length = 0.25;
-    group = new THREE.Group();
-    group.position.set(0, 0, -0.5);
+            const length = 0.25;
+            group = new THREE.Group();
+            group.position.set(0, 0, -0.5);
 
-    scene.add(group);
+            scene.add(group);
 
-    const url = new URL(window.location);
-    const imageUrlString = url.searchParams.get('image');
+            const url = new URL(window.location);
+            const imageUrlString = url.searchParams.get('image');
 
-    if (imageUrlString == null) {
-        loadTexture(group, length, 'Images/discovery.jpg');
-    } else {
-        try {
-            const imageUrl = new URL(imageUrlString);
-            document.getElementById("urlInput").value = imageUrlString;
-            loadTexture(group, length, imageUrl.toString());
-        } catch (exception) {
-            alert("Invalid URL, try a different URL.");
+            if (imageUrlString == null) {
+                loadTexture(group, length, 'Images/discovery.jpg');
+            } else {
+                try {
+                    const imageUrl = new URL(imageUrlString);
+                    document.getElementById("urlInput").value = imageUrlString;
+                    loadTexture(group, length, imageUrl.toString());
+                } catch (exception) {
+                    alert("Invalid URL, try a different URL.");
+                }
+            }
+
+            // Resize event
+
+            window.addEventListener('resize', onWindowResize);
+
+            // URL Input
+
+            const inputLink = document.getElementById("urlInputLink");
+            inputLink.onclick = changeImageUrl;
+
+            // Send to Quest
+
+            const sendToQuestLink = document.getElementById("urlToQuestLink");
+            sendToQuestLink.onclick = sendUrlToQuest;
         }
-    }
 
-    // Resize event
+        function changeImageUrl() {
+            const urlInput = document.getElementById("urlInput");
+            const url = new URL(window.location);
+            url.searchParams.set("image", urlInput.value);
+            window.location = url.toString();
+        }
 
-    window.addEventListener('resize', onWindowResize);
+        function sendUrlToQuest() {
+            const urlInput = document.getElementById("urlInput");
+            const url = new URL(window.location);
+            url.searchParams.set("image", urlInput.value);
 
-    // URL Input
+            let sendToQuestUrl = new URL("https://oculus.com/open_url/");
+            sendToQuestUrl.searchParams.set("url", url);
+            window.location.href = sendToQuestUrl;
+        }
 
-    const inputLink = document.getElementById("urlInputLink");
-    inputLink.onclick = changeImageUrl;
+        function loadTexture(container, length, url) {
 
-    // Send to Quest
+            const loader = new THREE.TextureLoader();
 
-    const sendToQuestLink = document.getElementById("urlToQuestLink");
-    sendToQuestLink.onclick = sendUrlToQuest;
-}
+            loader.load(
+                url,
 
-function changeImageUrl() {
-    const urlInput = document.getElementById("urlInput");
-    const url = new URL(window.location);
-    url.searchParams.set("image", urlInput.value);
-    window.location = url.toString();
-}
+                function (texture) {
+                    document.body.appendChild(ARButton.createButton(renderer));
 
-function sendUrlToQuest() {
-    const urlInput = document.getElementById("urlInput");
-    const url = new URL(window.location);
-    url.searchParams.set("image", urlInput.value);
+                    let originalWidth = texture.image.width;
+                    let originalHeight = texture.image.height;
 
-    let sendToQuestUrl = new URL("https://oculus.com/open_url/");
-    sendToQuestUrl.searchParams.set("url", url);
-    window.location.href = sendToQuestUrl;
-}
+                    let max = Math.max(originalWidth, originalHeight);
+                    let width = (originalWidth/max) * length;
+                    let height = (originalHeight/max) * length;
 
-function loadTexture(container, length, url) {
+                    const geometry = new THREE.PlaneGeometry(width, height);
 
-    const loader = new THREE.TextureLoader();
+                    texture.generateMipmaps = false;
 
-    loader.load(
-        url,
+                    const sobelMaterial = new THREE.ShaderMaterial({
+                        transparent: true,
+                        side: THREE.DoubleSide,
+                        uniforms: {
+                            colorTexture: { value: texture },
+                            opacity: { value: currentOpacity }
+                        },
+                        vertexShader: document.getElementById('vertexshader').textContent,
+                        fragmentShader: document.getElementById('fragmentshader').textContent
+                    });
 
-        function (texture) {
-            document.body.appendChild(ARButton.createButton(renderer));
+                    imagePlane = new THREE.Mesh(geometry, sobelMaterial);
 
-            let originalWidth = texture.image.width;
-            let originalHeight = texture.image.height;
-
-            let max = Math.max(originalWidth, originalHeight);
-            let width = (originalWidth/max) * length;
-            let height = (originalHeight/max) * length;
-
-            const geometry = new THREE.PlaneGeometry(width, height);
-
-            texture.generateMipmaps = false;
-
-            const sobelMaterial = new THREE.ShaderMaterial({
-                transparent: true,
-                side: THREE.DoubleSide,
-                uniforms: {
-                    colorTexture: { value: texture },
-                    opacity: { value: currentOpacity }
+                    container.add(imagePlane);
                 },
-                vertexShader: document.getElementById('vertexshader').textContent,
-                fragmentShader: document.getElementById('fragmentshader').textContent
-            });
 
-            imagePlane = new THREE.Mesh(geometry, sobelMaterial);
+                undefined,
 
-            container.add(imagePlane);
-        },
-
-        undefined,
-
-        function (err) {
-            alert("Unable to load image, try a different URL.");
+                function (err) {
+                    alert("Unable to load image, try a different URL.");
+                }
+            );
         }
-    );
-}
 
-function incrementOpacity(delta) {
-    currentOpacity += delta;
-    currentOpacity = Math.min(Math.max(currentOpacity, 0.0), 1.0);
+        function incrementOpacity(delta) {
+            currentOpacity += delta;
+            currentOpacity = Math.min(Math.max(currentOpacity, 0.0), 1.0);
 
-    if (imagePlane != null) {
-        imagePlane.material.uniforms["opacity"].value = currentOpacity;
-    }
-}
-
-function incrementScale(delta) {
-    currentScale += delta;
-    currentScale = Math.min(Math.max(currentScale, 0.0), 4.0);
-
-    if (group != null) {
-        group.scale.set(currentScale, currentScale, currentScale);
-    }
-}
-
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize( window.innerWidth, window.innerHeight );
-}
-
-//
-
-function animate() {
-    renderer.setAnimationLoop(loop);
-}
-
-function loop() {
-    const xrSession = renderer.xr.getSession();
-    const elapsedTime = clock.getDelta();
-
-    if (xrSession != null && xrSession.inputSources.length > 0) {
-
-        for (let i = 0; i < xrSession.inputSources.length; i++) {
-            const input = xrSession.inputSources[i];
-            const gamepad = input.gamepad; 
-
-            if (
-                input.handedness == "right" && 
-                gamepad != null && 
-                gamepad.mapping == "xr-standard" &&
-                gamepad.axes.length >= 4
-            ) {
-                const horizontal = gamepad.axes[2]; // Primary thumbstick X
-                const vertical = gamepad.axes[3]; // Primary thumbstick Y
-
-                const triggerButton = gamepad.buttons[0];
-
-                if (horizontal > 0.7) {
-                    incrementScale(1.0 * elapsedTime);
-                } else if (horizontal < -0.7) {
-                    incrementScale(-1.0 * elapsedTime);
-                }
-
-                if (vertical > 0.7) {
-                    incrementOpacity(-1.0 * elapsedTime);
-                } else if (vertical < -0.7) {
-                    incrementOpacity(1.0 * elapsedTime);
-                }
-
-                if (triggerButton.pressed) {
-                    const offsetPosition = controller1.localToWorld(new THREE.Vector3(0, 0, 0.045));
-                    group.position.copy(offsetPosition);
-                    group.setRotationFromQuaternion(controller1.quaternion);
-                }
+            if (imagePlane != null) {
+                imagePlane.material.uniforms["opacity"].value = currentOpacity;
             }
         }
 
-    }
+        function incrementScale(delta) {
+            currentScale += delta;
+            currentScale = Math.min(Math.max(currentScale, 0.0), 4.0);
 
-    ThreeMeshUI.update();
+            if (group != null) {
+                group.scale.set(currentScale, currentScale, currentScale);
+            }
+        }
 
-    renderer.render(scene, camera);
-}
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize( window.innerWidth, window.innerHeight );
+        }
+
+        //
+
+        function animate() {
+            renderer.setAnimationLoop(loop);
+        }
+
+        function loop() {
+            const xrSession = renderer.xr.getSession();
+            const elapsedTime = clock.getDelta();
+
+            if (xrSession != null && xrSession.inputSources.length > 0) {
+
+                for (let i = 0; i < xrSession.inputSources.length; i++) {
+                    const input = xrSession.inputSources[i];
+                    const gamepad = input.gamepad; 
+
+                    if (
+                        gamepad != null && 
+                        gamepad.mapping == "xr-standard" &&
+                        gamepad.axes.length >= 4
+                    ) {
+                        const horizontal = gamepad.axes[2]; // Primary thumbstick X
+                        const vertical = gamepad.axes[3]; // Primary thumbstick Y
+
+                        const triggerButton = gamepad.buttons[0];
+
+                        if (horizontal > 0.7) {
+                            incrementScale(1.0 * elapsedTime);
+                        } else if (horizontal < -0.7) {
+                            incrementScale(-1.0 * elapsedTime);
+                        }
+
+                        if (vertical > 0.7) {
+                            incrementOpacity(-1.0 * elapsedTime);
+                        } else if (vertical < -0.7) {
+                            incrementOpacity(1.0 * elapsedTime);
+                        }
+
+                        const controllerToUse = renderer.xr.getController(i);
+
+                        if (triggerButton.pressed) {
+                            const offsetPosition = controllerToUse.localToWorld(new THREE.Vector3(0, 0, 0.045));
+                            group.position.copy(offsetPosition);
+                            group.setRotationFromQuaternion(controllerToUse.quaternion);
+                        }
+                    }
+                }
+
+            }
+
+            ThreeMeshUI.update();
+
+            renderer.render(scene, camera);
+        }
 
         </script>
 
