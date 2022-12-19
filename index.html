@@ -172,6 +172,7 @@ function init() {
     } else {
         try {
             const imageUrl = new URL(imageUrlString);
+            document.getElementById("urlInput").value = imageUrlString;
             loadTexture(group, length, imageUrl.toString());
         } catch (exception) {
             alert("Invalid URL, try a different URL.");
@@ -186,6 +187,11 @@ function init() {
 
     const inputLink = document.getElementById("urlInputLink");
     inputLink.onclick = changeImageUrl;
+
+    // Send to Quest
+
+    const sendToQuestLink = document.getElementById("urlToQuestLink");
+    sendToQuestLink.onclick = sendUrlToQuest;
 }
 
 function changeImageUrl() {
@@ -193,6 +199,16 @@ function changeImageUrl() {
     const url = new URL(window.location);
     url.searchParams.set("image", urlInput.value);
     window.location = url.toString();
+}
+
+function sendUrlToQuest() {
+    const urlInput = document.getElementById("urlInput");
+    const url = new URL(window.location);
+    url.searchParams.set("image", urlInput.value);
+
+    let sendToQuestUrl = new URL("https://oculus.com/open_url/");
+    sendToQuestUrl.searchParams.set("url", url);
+    window.location.href = sendToQuestUrl;
 }
 
 function loadTexture(container, length, url) {
@@ -324,9 +340,10 @@ function loop() {
 
         <div class="popupWindow">
             <div class="popupHeader">XR Draw</div>
-            <div class="popupSection">Paste an image URL below, then click on "load image", or click on the AR button below to start.</div>
+            <div class="popupSection">1. Paste an image URL below.<br/>2. Click on "load image" or "Send link to Meta Quest".<br/>3. Click on the AR button below to start.</div>
             <div class="popupSection"><div style="margin-right: 8px"><input id="urlInput" type="url" style="width: 100%"/></div></div>
             <div class="popupSection"><a href="#" style="color: #EFEFEF" id="urlInputLink">Load image</a></div>
+            <div class="popupSection"><a href="#" style="color: #EFEFEF" id="urlToQuestLink">Send link to Meta Quest</a></div>
         </div>
     </body>
 </html>
