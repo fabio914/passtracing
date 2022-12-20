@@ -20,7 +20,9 @@ Inspired by [Easely](https://github.com/RalphVR/easely-meta-hackathon) and [Cont
 
 Meta Quest 2 or Meta Quest Pro.
 
-## How to use?
+## Instructions
+
+[Video](https://vm.tiktok.com/ZMFn8E64G/)
 
 1. Navigate to [fabio914.github.io/passtracing](https://fabio914.github.io/passtracing) with your PC.
 
