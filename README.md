@@ -1,6 +1,7 @@
-# Draw Passthrough
+# Passtracing <br/> Drawing/tracing projector in Augmented Reality (Passthrough)
 
-This is a simple [WebXR](https://immersiveweb.dev) app built with [three.js](https://threejs.org) and [three-mesh-ui](https://felixmariotto.github.io/three-mesh-ui/) that lets you use your Meta Quest 2 and Meta Quest Pro to draw/trace in Augmented Reality.
+
+This is a simple [WebXR](https://immersiveweb.dev) app built with [three.js](https://threejs.org) and [three-mesh-ui](https://felixmariotto.github.io/three-mesh-ui/) that lets you use your Meta Quest 2 and Meta Quest Pro to draw/trace on top of virtual images in Augmented Reality.
 
 Inspired by [Easely](https://github.com/RalphVR/easely-meta-hackathon) and [Contour](https://sidequestvr.com/app/6643/contour-demo).
 
@@ -10,7 +11,7 @@ Meta Quest 2 or Meta Quest Pro.
 
 ## How to use?
 
-1. Navigate to [fabio914.github.io/DrawPassthrough](https://fabio914.github.io/DrawPassthrough) with your PC.
+1. Navigate to [fabio914.github.io/passtracing](https://fabio914.github.io/passtracing) with your PC.
 
 2. Copy an image URL and paste on the text field. For example, a public domain image from [rawpixel](https://www.rawpixel.com/public-domain).
 
