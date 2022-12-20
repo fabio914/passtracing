@@ -6,6 +6,16 @@ This is a simple [WebXR](https://immersiveweb.dev) app built with [three.js](htt
 
 Inspired by [Easely](https://github.com/RalphVR/easely-meta-hackathon) and [Contour](https://sidequestvr.com/app/6643/contour-demo).
 
+## Screenshots
+
+<img src="Screenshots/0.jpg" width="320" />
+
+<img src="Screenshots/1.jpg" width="320" />
+
+<img src="Screenshots/2.jpg" width="320" />
+
+<img src="Screenshots/3.jpg" width="320" />
+
 ## Requirements
 
 Meta Quest 2 or Meta Quest Pro.
