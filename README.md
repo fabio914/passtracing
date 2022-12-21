@@ -14,6 +14,8 @@ Inspired by [Easely](https://github.com/RalphVR/easely-meta-hackathon) and [Cont
 
 2. Copy an image URL and paste on the text field. For example, a public domain image from [rawpixel](https://www.rawpixel.com/public-domain).
 
+*Keep in mind that some [CORS policies](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) might prevent the app from loading images from certain websites. You'll want to use URLs from websites that allow their content to be loaded from any origin* (`Access-Control-Allow-Origin: *`).
+
 3. Click on "Load image" to reload the page with this image, or click on "Send link to Meta Quest" to send this to your Meta Quest 2 or Meta Quest Pro.
 
 4. After opening the link on your Meta Quest 2 or Meta Quest Pro, click on "Start AR" to start.

@@ -3,8 +3,13 @@
     <head>
         <title>Passtracing</title>
         <meta charset="utf-8">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.3/gh-fork-ribbon.min.css" />
         <style>
         body { margin: 0; }
+
+        .github-fork-ribbon:before { 
+            background-color: #f80; 
+        }
 
         .popupWindow {
             position: fixed;
@@ -371,7 +376,7 @@
                 undefined,
 
                 function (err) {
-                    alert("Unable to load image, try a different URL.");
+                    alert("Unable to load image, try a different URL.\n\nCross-Origin Resource Sharing (CORS) policies might prevent the app from loading images from certain websites.");
                 }
             );
         }
@@ -451,6 +456,8 @@
                         incrementOpacity(-1.0 * elapsedTime);
                     }
 
+                    // FIXME: This index won't match the correct controller
+                    // if a disconnection happens during the session.
                     const controllerToUse = renderer.xr.getController(i);
 
                     if (triggerButton.pressed) {
@@ -485,6 +492,8 @@
         }
 
         </script>
+
+        <a class="github-fork-ribbon" href="https://github.com/fabio914/passtracing" data-ribbon="Fork me on GitHub" title="Fork me on GitHub">Fork me on GitHub</a>
 
         <div id="container"></div>
 
